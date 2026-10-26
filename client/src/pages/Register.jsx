@@ -1,0 +1,11 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthFrame } from './Login.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+
+export default function Register() {
+  const { register } = useAuth(); const navigate = useNavigate();
+  const [form, setForm] = useState({ username: '', email: '', password: '', role: 'Viewer' }); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
+  async function submit(e) { e.preventDefault(); setBusy(true); setError(''); try { await register(form); navigate('/', { replace: true }); } catch (err) { setError(err.message); } finally { setBusy(false); } }
+  return <AuthFrame title="Create your account" subtitle="Join the workspace to monitor stations and reports."><form className="space-y-4" onSubmit={submit}>{error&&<p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}<label><span className="label">Username</span><input className="field" autoComplete="username" minLength="3" maxLength="40" required value={form.username} onChange={e=>setForm({...form,username:e.target.value})}/></label><label><span className="label">Email</span><input className="field" type="email" autoComplete="email" required value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label><span className="label">Password</span><input className="field" type="password" autoComplete="new-password" minLength="10" maxLength="72" required value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/><span className="mt-1 block text-xs text-slate-400">Use at least 10 characters (up to 72 UTF-8 bytes).</span></label><label><span className="label">Account role</span><select className="field" value={form.role} onChange={e=>setForm({...form,role:e.target.value})}><option>Viewer</option><option>Operator</option><option>Admin</option></select><span className="mt-1 block text-xs text-slate-400">Role requests are granted only when an Admin creates the account.</span></label><button disabled={busy} className="btn-primary w-full">{busy?'Creating account…':'Create account'}</button><p className="text-center text-sm text-slate-500">Already registered? <Link className="font-semibold text-teal-700" to="/login">Sign in</Link></p></form></AuthFrame>;
+}

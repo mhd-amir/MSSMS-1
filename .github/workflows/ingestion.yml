@@ -1,0 +1,35 @@
+name: MSSMS weather ingestion
+
+on:
+  schedule:
+    # GitHub scheduled workflows use UTC and may start a little later than scheduled.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Trigger MSSMS ingestion endpoint
+        env:
+          API_BASE_URL: ${{ secrets.MSSMS_API_BASE_URL }}
+          CRON_SECRET: ${{ secrets.MSSMS_CRON_SECRET }}
+        run: |
+          set -eu
+          if [ -z "$API_BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Configure MSSMS_API_BASE_URL and MSSMS_CRON_SECRET in repository Actions secrets."
+            exit 1
+          fi
+          case "$API_BASE_URL" in
+            https://*) ;;
+            *) echo "MSSMS_API_BASE_URL must start with https://"; exit 1 ;;
+          esac
+          curl --fail --silent --show-error \
+            --max-time 90 \
+            --retry 2 --retry-delay 5 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$API_BASE_URL/api/internal/cron/ingest"
